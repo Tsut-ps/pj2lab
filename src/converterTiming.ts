@@ -1,5 +1,5 @@
 // Synthesizer V の位置情報を秒へ変換するための補助
-const QUARTER_NOTE_UNITS = 70_560_000
+const QUARTER_NOTE_UNITS = 705_600_000
 export const LAB_UNIT_PER_SECOND = 10_000_000
 
 export type TempoEvent = {
