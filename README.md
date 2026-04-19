@@ -1,21 +1,139 @@
-# React + TypeScript + Vite + shadcn/ui
+# pj2lab-vite
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+Synthesizer V の `.svp` ファイルを、音声処理で使いやすい `.lab` テキストへ変換する Web ツールです。  
+ブラウザだけで動作し、ファイルのアップロード先サーバーは不要です。
 
-## Adding components
+## できること
 
-To add components to your app, run the following command:
+- `.svp` を読み込んで `.lab` 形式へ変換
+- `phonemes` があるノートは優先して使用
+- `phonemes` がない場合は `lyrics` から日本語音素を推定
+- 音素の長さによってラベル長を自動調整
+- 長音記号 (`ー`, `-`) の母音展開オプション
+- 変換警告の表示（解釈できない文字など）
+- 変換結果のプレビューと `.lab` ダウンロード
+
+## 対応状況
+
+- 入力形式: Synthesizer V (`.svp`) のみ対応
+- 未対応: VOCALOID 形式（UI 上に表示はありますが、まだ変換不可）
+
+## クイックスタート
+
+### 1. 必要環境
+
+- Node.js 20 以上を推奨
+- npm
+
+### 2. インストール
 
 ```bash
-npx shadcn@latest add button
+npm install
 ```
 
-This will place the ui components in the `src/components` directory.
+### 3. 開発サーバー起動
 
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button"
+```bash
+npm run dev
 ```
+
+起動後、表示された URL をブラウザで開いて利用します。
+
+## 使い方（3 ステップ）
+
+### 1. `.svp` ファイルを選ぶ
+
+- ドラッグ&ドロップ、またはクリックで選択
+
+### 2. 変換設定を選ぶ
+
+- 変換モード
+	- `音素を推定する`  
+		音素指定がある場合に優先 + なければ歌詞から音素を推定  
+    （svp には音素指定がもともとないため）
+	- `lyrics をそのまま出力`  
+		確認用。歌詞をそのまま lab へ出力しますが、/a/ のような音素ではない文字もそのまま出力するモードです  
+    正規化されたものではないため、（そのまま解釈するものでない限り）他のソフトで読み込めないことがほとんどです
+- 追加オプション
+	- `長音記号を前の母音で展開`  
+		`ー` / `-` を前ノート母音に寄せる
+- 音素の出力単位（推定モード時のみ有効）
+	- `音素ごとに分割`  
+    音素ごとにノートを分割して出力します。音素の長さに応じてノート長も自動調整されます。lab として正しい形式です  
+    ただし、音素の長さはあくまで推定値であり、各種エンジンの出力と完全に一致するわけではないです（揺らぎ等を搭載している場合）
+	- `ノート単位で結合`
+    / ka / のように、ノート単位で音素を結合して出力します。音素の長さに関わらずノート長は元のままです。lab としては正しくない形式です  
+    単純に歌詞を音素に変換したい場合や、音素ごとの正確な長さを取りたいときに選択します
+
+### 3. 変換してダウンロード
+
+- `変換する` を押して結果を生成
+- `lab プレビュー` と `警告` を確認
+- 問題なければ `ダウンロード` を押す
+
+## 出力ファイル名のルール
+
+出力名は次の形式で生成されます。
+
+```text
+{元ファイル名}_{mode}_{output}.lab
+```
+
+例:
+
+- `song_inferred_split.lab`
+- `song_inferred_combined.lab`
+- `song_raw_lyrics_split.lab`
+
+## 開発コマンド
+
+```bash
+# 開発サーバー
+npm run dev
+
+# 本番ビルド
+npm run build
+
+# ビルド結果のプレビュー
+npm run preview
+```
+
+## プロジェクト構成（主要部分）
+
+```text
+src/
+	App.tsx                # UI 本体
+	converter.ts           # 変換の入口（.svp -> .lab）
+	converterTiming.ts     # テンポ処理
+	converterPhonemes.ts   # 音素推定・変換補助
+	converter/
+		converterProject.ts  # .svp パースとノート抽出
+		converterSegments.ts # LAB セグメント生成
+		converterUnits.ts    # ノート単位の変換ロジック
+```
+
+## 注意点
+
+- `.svp` は実体として JSON 形式を想定して解析しています
+- `rap` ノートは変換対象から除外されます
+- 想定外のデータではエラーになります
+
+## トラブルシューティング
+
+### 変換ボタンが押せない
+
+- 入力形式が `Synthesizer V` になっているか確認
+- `.svp` ファイルが選択されているか確認
+
+### 変換後に警告が多い
+
+- `lyrics` に特殊記号が混ざっていないか確認
+- 必要に応じて `lyrics をそのまま出力` で差分確認
+
+### 設定変更後にダウンロードできない
+
+- 設定変更した場合は、再度 `変換する` を実行してください
+
+## ライセンス
+
+MIT License
