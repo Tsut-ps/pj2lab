@@ -130,5 +130,4 @@ export const MONOGRAPH_MAP: Record<string, string[]> = {
 }
 
 export const STRIPPABLE_PUNCTUATION = /[\s\u3000・…。、,.!?！？()（）「」『』{}[\]]/g
-export const IGNORABLE_MARKS = new Set(["'", "’", "‘"])
 export const VOWELS = new Set(["a", "i", "u", "e", "o", "N"])

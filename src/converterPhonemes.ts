@@ -1,7 +1,6 @@
 // lyrics から音素列を推定する処理をまとめる (解釈できない要素は warning 付きで残す)
 import {
   DIGRAPH_MAP,
-  IGNORABLE_MARKS,
   MONOGRAPH_MAP,
   STRIPPABLE_PUNCTUATION,
 } from "@/converter/phonemeMaps"
@@ -18,10 +17,7 @@ export function lyricToPhones(
   expandLongVowel: boolean,
   previousVowel: string | null = null
 ): PhoneInferenceResult {
-  const lyric = katakanaToHiragana(rawLyric).replace(
-    STRIPPABLE_PUNCTUATION,
-    ""
-  )
+  const lyric = katakanaToHiragana(rawLyric).replace(STRIPPABLE_PUNCTUATION, "")
   const units: string[] = []
   const warnings: string[] = []
   let lastVowel = previousVowel
@@ -32,7 +28,9 @@ export function lyricToPhones(
     const next = lyric[index + 1] ?? ""
     const pair = char + next
 
-    if (IGNORABLE_MARKS.has(char)) {
+    // SynthV 準拠: 先頭の ' / ’ / ‘ は cl
+    if (char === "'" || char === "’" || char === "‘") {
+      units.push("cl")
       index += 1
       continue
     }
