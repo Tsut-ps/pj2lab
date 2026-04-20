@@ -85,15 +85,32 @@ function splitDurations(
     return []
   }
 
-  const validWeights = weights
-    ?.slice(0, unitCount)
-    .filter((weight) => Number.isFinite(weight) && weight > 0)
+  const normalizedWeights = normalizeDurationWeights(unitCount, weights)
 
-  if (validWeights && validWeights.length === unitCount) {
-    const totalWeight = validWeights.reduce((sum, weight) => sum + weight, 0)
-    return validWeights.map((weight) => (noteLengthSeconds * weight) / totalWeight)
+  if (normalizedWeights) {
+    const totalWeight = normalizedWeights.reduce((sum, weight) => sum + weight, 0)
+    return normalizedWeights.map(
+      (weight) => (noteLengthSeconds * weight) / totalWeight
+    )
   }
 
   const evenDuration = noteLengthSeconds / unitCount
   return Array.from({ length: unitCount }, () => evenDuration)
+}
+
+function normalizeDurationWeights(unitCount: number, weights?: number[]) {
+  if (!weights || weights.length === 0) {
+    return null
+  }
+
+  return Array.from({ length: unitCount }, (_, index) => {
+    const weight = weights[index]
+
+    // dur 未指定ぶんは SynthV の既定値 100% とみなす。
+    if (!Number.isFinite(weight) || weight <= 0) {
+      return 1
+    }
+
+    return weight
+  })
 }
