@@ -1,9 +1,10 @@
-// SVP テキストを LAB テキストへ変換する
+// svp を lab へ変換する
 import { buildTempoMap } from "@/converterTiming"
 import {
   collectConvertibleNotes,
   DEFAULT_TEMPO_EVENTS,
   parseProject,
+  parseVprProject,
 } from "@/converter/converterProject"
 import { buildLabText, createSegmentsForNote } from "@/converter/converterSegments"
 import type {
@@ -27,6 +28,21 @@ export function convertSvpToLab(
   options: ConversionOptions
 ): ConversionResult {
   const project = parseProject(text)
+  return convertProjectToLab(project, options)
+}
+
+export function convertVprToLab(
+  buffer: ArrayBuffer,
+  options: ConversionOptions
+): ConversionResult {
+  const project = parseVprProject(buffer)
+  return convertProjectToLab(project, options)
+}
+
+function convertProjectToLab(
+  project: ReturnType<typeof parseProject>,
+  options: ConversionOptions
+) {
   const tracks = project.tracks ?? []
   const notes = collectConvertibleNotes(tracks)
   const tempoMap = buildTempoMap(project.time?.tempo ?? DEFAULT_TEMPO_EVENTS)

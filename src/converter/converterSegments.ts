@@ -1,5 +1,5 @@
-// 音素列を、開始・終了時刻付きの LAB セグメントへ変換する
-// ノート長を各単位へ割り振り、最終的に LAB 形式のテキストへ整形する
+// 音素列を、開始・終了時刻付きの lab セグメントへ変換する
+// ノート長を各単位へ割り振り、最終的に lab 形式のテキストへ整形する
 import {
   LAB_UNIT_PER_SECOND,
   buildTempoMap,
@@ -48,7 +48,7 @@ export function createSegmentsForNote(
       continue
     }
 
-    // LAB は整数時間単位なので、各セグメントごとに丸めて出力する
+    // lab は整数時間単位なので、各セグメントごとに丸めて出力する
     segments.push({ start, end, phone: unit })
   }
 

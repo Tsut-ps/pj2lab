@@ -3,6 +3,7 @@ import { Download, FileAudio, RefreshCw } from "lucide-react"
 
 import {
   convertSvpToLab,
+  convertVprToLab,
   type ConversionMode,
   type ConversionOptions,
   type ConversionResult,
@@ -24,7 +25,20 @@ import { cn } from "@/lib/utils"
 
 const DEFAULT_OUTPUT_BASENAME = "pj2lab"
 const WARNING_PLACEHOLDER = "警告はありません"
-const PREVIEW_PLACEHOLDER = "ここに変換済みの LAB テキストが表示されます。"
+const PREVIEW_PLACEHOLDER = "ここに変換済みの lab テキストが表示されます。"
+
+const sourceMeta = {
+  svp: {
+    label: "Synthesizer V",
+    fileExtension: ".svp",
+    accept: ".svp,application/json",
+  },
+  vocaloid: {
+    label: "VOCALOID",
+    fileExtension: ".vpr",
+    accept: ".vpr",
+  },
+} as const
 
 type InputSource = "svp" | "vocaloid"
 
@@ -46,14 +60,14 @@ const sourceOptions = [
   {
     value: "svp",
     title: "Synthesizer V",
-    description: ".svp ファイルを読み込んで LAB に変換します。",
+    description: ".svp ファイルを読み込んで lab に変換します。",
     badge: "対応中",
   },
   {
     value: "vocaloid",
     title: "VOCALOID",
-    description: "※今後の対応候補です。現時点では変換できません。",
-    badge: "未対応",
+    description: ".vpr ファイルを読み込んで lab に変換します。",
+    badge: "対応中",
   },
 ] satisfies Array<{
   value: InputSource
@@ -73,7 +87,7 @@ const modeOptions = [
     value: "raw-lyrics",
     title: "lyrics をそのまま出力",
     description:
-      "ノートごとの lyrics をそのまま LAB に出力します。確認用のモードです。",
+      "ノートごとの lyrics をそのまま lab に出力します。確認用のモードです。",
   },
 ] satisfies Array<{
   value: ConversionMode
@@ -117,10 +131,12 @@ export function App() {
     isDirty: false,
   })
 
-  const isSourceSupported = form.source === "svp"
+  const isSourceSupported = form.source === "svp" || form.source === "vocaloid"
   const hasResult = Boolean(viewState.result?.labText)
   const isBusy = isConverting || isPending
   const canDownload = isSourceSupported && hasResult && !viewState.isDirty
+  const currentSource = sourceMeta[form.source]
+  const fileAccept = currentSource.accept
   const warningsText = viewState.result
     ? formatWarnings(viewState.result)
     : WARNING_PLACEHOLDER
@@ -148,9 +164,9 @@ export function App() {
   )
 
   const statusMessage = !isSourceSupported
-    ? "VOCALOID 形式はまだ未対応です。"
+    ? `${currentSource.label} 形式はまだ未対応です。`
     : !selectedFile
-      ? ".svp ファイルを選択してください。"
+      ? `${currentSource.fileExtension} ファイルを選択してください。`
       : viewState.isDirty
         ? "設定を変更しました。再変換すると最新の結果に更新されます。"
         : hasResult
@@ -166,6 +182,17 @@ export function App() {
   }
 
   function updateFormState<K extends keyof FormState>(key: K, value: FormState[K]) {
+    if (key === "source" && form.source !== value) {
+      // 入力形式を切り替えたら、選択済みファイルもリセットして取り違えを防ぐ。
+      setSelectedFile(null)
+      setViewState({
+        result: null,
+        error: null,
+        baseName: DEFAULT_OUTPUT_BASENAME,
+        isDirty: false,
+      })
+    }
+
     setForm((current) => ({
       ...current,
       [key]: value,
@@ -200,7 +227,7 @@ export function App() {
       setViewState((current) => ({
         ...current,
         result: null,
-        error: "変換する .svp ファイルを選択してください。",
+        error: `変換する ${currentSource.fileExtension} ファイルを選択してください。`,
         isDirty: false,
       }))
       return
@@ -209,13 +236,15 @@ export function App() {
     setIsConverting(true)
 
     try {
-      const text = await selectedFile.text()
       const options: ConversionOptions = {
         mode: form.mode,
         expandLongVowel: form.expandLongVowel,
         outputMode: form.outputMode,
       }
-      const result = convertSvpToLab(text, options)
+      const result =
+        form.source === "vocaloid"
+          ? convertVprToLab(await selectedFile.arrayBuffer(), options)
+          : convertSvpToLab(await selectedFile.text(), options)
 
       startTransition(() => {
         setViewState({
@@ -257,8 +286,9 @@ export function App() {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight">pj2lab</h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              Synthesizer V の `.svp` を読み込み、LAB テキストへ変換します。
-              `phonemes` 優先、lyrics 推定、警告表示、ダウンロードまでを 1 画面にまとめています。
+              Synthesizer V の `.svp` と VOCALOID の `.vpr` を読み込み、LAB
+              テキストへ変換します。`phonemes` 優先、lyrics 推定、警告表示、
+              ダウンロードまでを 1 画面にまとめています。
             </p>
           </div>
         </header>
@@ -280,7 +310,7 @@ export function App() {
                     title={option.title}
                     description={option.description}
                     badge={option.badge}
-                    badgeVariant={option.value === "svp" ? "secondary" : "warning"}
+                    badgeVariant="secondary"
                     onClick={() => {
                       updateFormState("source", option.value)
                     }}
@@ -300,7 +330,7 @@ export function App() {
                 <input
                   id={fileInputId}
                   type="file"
-                  accept=".svp,application/json"
+                  accept={fileAccept}
                   className="sr-only"
                   onChange={(event) => {
                     const file = event.currentTarget.files?.[0] ?? null
@@ -337,7 +367,7 @@ export function App() {
                     <p className="font-medium">
                       {selectedFile
                         ? "ファイルを選択済みです"
-                        : "ここに .svp ファイルをドロップ"}
+                        : `ここに ${currentSource.fileExtension} ファイルをドロップ`}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {selectedFile
@@ -352,7 +382,9 @@ export function App() {
             <Card>
               <CardHeader>
                 <CardTitle>変換設定</CardTitle>
-                <CardDescription>必要な設定だけをまとめています。</CardDescription>
+                <CardDescription>
+                  必要な設定だけをまとめています。
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-5">
                 <div className="grid gap-3">
@@ -384,7 +416,10 @@ export function App() {
                           "border-primary bg-primary/8 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.18)]"
                       )}
                       onClick={() => {
-                        updateFormState("expandLongVowel", !form.expandLongVowel)
+                        updateFormState(
+                          "expandLongVowel",
+                          !form.expandLongVowel
+                        )
                       }}
                     >
                       <div className="space-y-1">
@@ -405,7 +440,9 @@ export function App() {
                         <span
                           className={cn(
                             "inline-block size-4 rounded-full bg-background shadow-sm transition-transform",
-                            form.expandLongVowel ? "translate-x-6" : "translate-x-1"
+                            form.expandLongVowel
+                              ? "translate-x-6"
+                              : "translate-x-1"
                           )}
                         />
                       </span>
@@ -423,7 +460,8 @@ export function App() {
                   <div
                     className={cn(
                       "grid gap-3 sm:grid-cols-2",
-                      form.mode === "raw-lyrics" && "pointer-events-none opacity-50"
+                      form.mode === "raw-lyrics" &&
+                        "pointer-events-none opacity-50"
                     )}
                   >
                     {outputOptions.map((option) => (
@@ -454,7 +492,9 @@ export function App() {
                   className="px-4 text-base"
                   disabled={!isSourceSupported || !selectedFile || isBusy}
                 >
-                  <RefreshCw className={cn("size-4", isBusy && "animate-spin")} />
+                  <RefreshCw
+                    className={cn("size-4", isBusy && "animate-spin")}
+                  />
                   {isBusy ? "変換中..." : "変換する"}
                 </Button>
                 <Button
@@ -495,8 +535,12 @@ export function App() {
                 {stats.map((stat) => (
                   <Card key={stat.label}>
                     <CardContent className="p-4">
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="mt-2 text-2xl font-semibold">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {stat.label}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold">
+                        {stat.value}
+                      </p>
                     </CardContent>
                   </Card>
                 ))}
@@ -506,7 +550,7 @@ export function App() {
                 <CardHeader>
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <CardTitle>LAB プレビュー</CardTitle>
+                      <CardTitle>lab プレビュー</CardTitle>
                       <CardDescription>
                         変換後のテキストを確認できます。
                       </CardDescription>
@@ -535,7 +579,8 @@ export function App() {
                 </CardHeader>
                 <CardContent className="grid gap-3">
                   <div className="text-sm leading-6 text-muted-foreground">
-                    `phonemes` があるノートはその内容を優先し、`rap` ノートは変換対象から除外します。
+                    `phonemes` があるノートはその内容を優先し、`rap`
+                    ノートは変換対象から除外します。
                   </div>
                   <Textarea
                     value={warningsText}
@@ -550,7 +595,7 @@ export function App() {
 
         <footer className="mt-8 border-t pt-6 text-center text-xs text-muted-foreground/70">
           <p>
-            © Tsut-ps. Deployed with {" "}
+            © Tsut-ps. Deployed with{" "}
             <a
               href="https://github.com/Tsut-ps/pj2lab-vite"
               target="_blank"
