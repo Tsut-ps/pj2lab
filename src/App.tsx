@@ -184,7 +184,10 @@ export function App() {
     }))
   }
 
-  function updateFormState<K extends keyof FormState>(key: K, value: FormState[K]) {
+  function updateFormState<K extends keyof FormState>(
+    key: K,
+    value: FormState[K]
+  ) {
     if (key === "source" && form.source !== value) {
       // 入力形式を切り替えたら、選択済みファイルもリセットして取り違えを防ぐ。
       setSelectedFile(null)
@@ -293,9 +296,8 @@ export function App() {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight">pj2lab</h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              Synthesizer V の `.svp` と VOCALOID の `.vpr` を読み込み、LAB
-              テキストへ変換します。`phonemes` 優先、lyrics 推定、警告表示、
-              ダウンロードまでを 1 画面にまとめています。
+              Synthesizer V の `.svp` と VOCALOID の `.vpr`
+              を読み込み、好みの設定で lab テキストへ変換します。
             </p>
           </div>
         </header>
@@ -701,7 +703,9 @@ function ChoiceCard({
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <p className="font-medium">{title}</p>
-          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
         </div>
         <div className="flex items-start gap-2">
           {badge ? <Badge variant={badgeVariant}>{badge}</Badge> : null}
@@ -726,7 +730,10 @@ function formatWarnings(result: ConversionResult) {
   }
 
   return result.warnings
-    .map((warning) => `#${warning.noteIndex} [${warning.lyrics}] ${warning.message}`)
+    .map(
+      (warning) =>
+        `#${warning.noteIndex} [${warning.lyrics}] ${warning.message}`
+    )
     .join("\n")
 }
 
