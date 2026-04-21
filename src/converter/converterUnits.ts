@@ -14,6 +14,20 @@ export function resolveUnits(
   noteIndex: number,
   previousVowel: string | null
 ): ResolvedUnits {
+  const lyric = note.lyrics?.trim() ?? ""
+  if (options.mode === "raw-lyrics") {
+    if (lyric) {
+      return { units: [lyric], warnings: [], lastVowel: null }
+    }
+
+    const explicitUnits = splitExplicitUnits(note.phonemes)
+    if (explicitUnits !== null) {
+      return { units: [explicitUnits.join(" ")], warnings: [], lastVowel: null }
+    }
+
+    return { units: [], warnings: [], lastVowel: null }
+  }
+
   const explicitUnits = splitExplicitUnits(note.phonemes)
   if (explicitUnits !== null) {
     return {
@@ -23,17 +37,12 @@ export function resolveUnits(
     }
   }
 
-  const lyric = note.lyrics?.trim() ?? ""
   if (!lyric) {
     return { units: [], warnings: [], lastVowel: null }
   }
 
   if (lyric === "br") {
     return { units: ["br"], warnings: [], lastVowel: null }
-  }
-
-  if (options.mode === "raw-lyrics") {
-    return { units: [lyric], warnings: [], lastVowel: null }
   }
 
   // 単独の "-" ノートでも伸ばし棒を展開できるよう、前ノートの母音を引き継ぐ
