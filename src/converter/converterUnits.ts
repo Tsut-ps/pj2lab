@@ -17,7 +17,21 @@ export function resolveUnits(
   const lyric = note.lyrics?.trim() ?? ""
   if (options.mode === "raw-lyrics") {
     if (lyric) {
-      return { units: [lyric], warnings: [], lastVowel: null }
+      if (lyric === "br") {
+        return { units: ["br"], warnings: [], lastVowel: null }
+      }
+
+      const resolvedLyric = resolveRawLyricUnit(
+        lyric,
+        options.expandLongVowel,
+        previousVowel
+      )
+
+      return {
+        units: [resolvedLyric.unit],
+        warnings: [],
+        lastVowel: resolvedLyric.lastVowel,
+      }
     }
 
     const explicitUnits = splitExplicitUnits(note.phonemes)
@@ -70,4 +84,63 @@ function splitExplicitUnits(phonemes: string | undefined): string[] | null {
     .split(/\s+/)
     .map((unit) => unit.trim())
     .filter(Boolean)
+}
+
+const PHONE_TO_LYRIC_VOWEL: Record<string, string> = {
+  a: "あ",
+  i: "い",
+  u: "う",
+  e: "え",
+  o: "お",
+  N: "ん",
+}
+
+function resolveRawLyricUnit(
+  lyric: string,
+  expandLongVowel: boolean,
+  previousVowel: string | null
+) {
+  if (!expandLongVowel) {
+    return {
+      unit: lyric,
+      lastVowel: inferRawLyricVowel(lyric, previousVowel),
+    }
+  }
+
+  let expanded = ""
+  let currentVowel = previousVowel
+
+  for (const char of lyric) {
+    if ((char === "ー" || char === "-") && currentVowel) {
+      expanded += currentVowel
+    } else {
+      expanded += char
+    }
+
+    currentVowel = inferRawLyricVowel(expanded, previousVowel) ?? currentVowel
+  }
+
+  return {
+    unit: expanded,
+    lastVowel: currentVowel,
+  }
+}
+
+function inferRawLyricVowel(lyric: string, previousVowel: string | null) {
+  const previousPhone = previousVowel ? lyricVowelToPhone(previousVowel) : null
+  const inferred = lyricToPhones(lyric, false, previousPhone)
+
+  if (!inferred.lastVowel) {
+    return null
+  }
+
+  return PHONE_TO_LYRIC_VOWEL[inferred.lastVowel] ?? null
+}
+
+function lyricVowelToPhone(vowel: string) {
+  const match = Object.entries(PHONE_TO_LYRIC_VOWEL).find(
+    ([, lyricVowel]) => lyricVowel === vowel
+  )
+
+  return match?.[0] ?? null
 }
