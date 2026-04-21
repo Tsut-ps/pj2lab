@@ -46,6 +46,7 @@ type FormState = {
   source: InputSource
   mode: ConversionMode
   expandLongVowel: boolean
+  normalizeHyphenAsLongVowel: boolean
   outputMode: PhonemeOutputMode
 }
 
@@ -122,6 +123,7 @@ export function App() {
     source: "svp",
     mode: "inferred",
     expandLongVowel: true,
+    normalizeHyphenAsLongVowel: false,
     outputMode: "split",
   })
   const [viewState, setViewState] = React.useState<ConversionViewState>({
@@ -137,6 +139,7 @@ export function App() {
   const canDownload = isSourceSupported && hasResult && !viewState.isDirty
   const currentSource = sourceMeta[form.source]
   const fileAccept = currentSource.accept
+  const isHyphenNormalizationEffective = !form.expandLongVowel
   const warningsText = viewState.result
     ? formatWarnings(viewState.result)
     : WARNING_PLACEHOLDER
@@ -196,6 +199,9 @@ export function App() {
     setForm((current) => ({
       ...current,
       [key]: value,
+      ...(key === "expandLongVowel" && value
+        ? { normalizeHyphenAsLongVowel: false }
+        : {}),
     }))
     markDirty()
   }
@@ -239,6 +245,7 @@ export function App() {
       const options: ConversionOptions = {
         mode: form.mode,
         expandLongVowel: form.expandLongVowel,
+        normalizeHyphenAsLongVowel: form.normalizeHyphenAsLongVowel,
         outputMode: form.outputMode,
       }
       const result =
@@ -431,7 +438,7 @@ export function App() {
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "relative inline-flex h-6 w-11 items-center rounded-full border transition-colors",
+                          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors",
                           form.expandLongVowel
                             ? "border-primary/50 bg-primary"
                             : "border-border bg-muted"
@@ -441,6 +448,57 @@ export function App() {
                           className={cn(
                             "inline-block size-4 rounded-full bg-background shadow-sm transition-transform",
                             form.expandLongVowel
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          )}
+                        />
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      aria-pressed={form.normalizeHyphenAsLongVowel}
+                      disabled={!isHyphenNormalizationEffective}
+                      className={cn(
+                        "flex items-start justify-between gap-4 rounded-lg border px-4 py-3 text-left transition-colors hover:border-primary/30",
+                        !isHyphenNormalizationEffective &&
+                          "cursor-not-allowed opacity-50 hover:border-border",
+                        form.normalizeHyphenAsLongVowel &&
+                          "border-primary bg-primary/8 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.18)]"
+                      )}
+                      onClick={() => {
+                        if (!isHyphenNormalizationEffective) {
+                          return
+                        }
+
+                        updateFormState(
+                          "normalizeHyphenAsLongVowel",
+                          !form.normalizeHyphenAsLongVowel
+                        )
+                      }}
+                    >
+                      <div className="space-y-1">
+                        <p className="font-medium">`-` を `ー` に正規化</p>
+                        <p className="text-sm leading-6 text-muted-foreground">
+                          歌詞中の半角ハイフンを長音記号として扱いやすい形に置き換えます。
+                          {isHyphenNormalizationEffective
+                            ? ""
+                            : " 長音展開がオンの間は無効です。"}
+                        </p>
+                      </div>
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors",
+                          form.normalizeHyphenAsLongVowel
+                            ? "border-primary/50 bg-primary"
+                            : "border-border bg-muted"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "inline-block size-4 rounded-full bg-background shadow-sm transition-transform",
+                            form.normalizeHyphenAsLongVowel
                               ? "translate-x-6"
                               : "translate-x-1"
                           )}

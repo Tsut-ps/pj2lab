@@ -40,6 +40,7 @@ export type PhonemeOutputMode = "split" | "combined"
 export type ConversionOptions = {
   mode: ConversionMode
   expandLongVowel: boolean
+  normalizeHyphenAsLongVowel: boolean
   outputMode: PhonemeOutputMode
 }
 

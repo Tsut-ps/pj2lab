@@ -14,7 +14,7 @@ export function resolveUnits(
   noteIndex: number,
   previousVowel: string | null
 ): ResolvedUnits {
-  const lyric = note.lyrics?.trim() ?? ""
+  const lyric = normalizeLyricText(note.lyrics?.trim() ?? "", options)
   if (options.mode === "raw-lyrics") {
     if (lyric) {
       if (lyric === "br") {
@@ -143,4 +143,16 @@ function lyricVowelToPhone(vowel: string) {
   )
 
   return match?.[0] ?? null
+}
+
+function normalizeLyricText(lyric: string, options: ConversionOptions) {
+  if (
+    !lyric ||
+    !options.normalizeHyphenAsLongVowel ||
+    options.expandLongVowel
+  ) {
+    return lyric
+  }
+
+  return lyric.replace(/-/g, "ー")
 }
