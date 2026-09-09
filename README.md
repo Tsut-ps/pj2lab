@@ -3,7 +3,7 @@
 
 一応実験的ですが、サイトは残しています。
 
-# pj2lab-vite
+# pj2lab
 
 <img width="1624" height="839" alt="image" src="https://github.com/user-attachments/assets/e9506858-68cd-48e8-9227-ea99506f66ac" />
 

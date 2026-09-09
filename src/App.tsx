@@ -657,7 +657,7 @@ export function App() {
           <p>
             © Tsut-ps. Deployed with{" "}
             <a
-              href="https://github.com/Tsut-ps/pj2lab-vite"
+              href="https://github.com/Tsut-ps/pj2lab"
               target="_blank"
               rel="noreferrer"
               className="underline-offset-4 hover:text-foreground hover:underline"
