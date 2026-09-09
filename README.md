@@ -5,7 +5,7 @@
 
 # pj2lab-vite
 
-<img width="1731" height="990" alt="image" src="https://github.com/user-attachments/assets/668a7ee3-d92f-4f63-a47e-12565e594a8d" />
+<img width="1624" height="839" alt="image" src="https://github.com/user-attachments/assets/e9506858-68cd-48e8-9227-ea99506f66ac" />
 
 Synthesizer V の `.svp` と VOCALOID の `.vpr` を、音声処理で使いやすい `.lab` テキストへ変換する Web ツールです。  
 ブラウザだけで動作し、ファイルを外部サーバーへアップロードせずに利用できます。
