@@ -1,4 +1,11 @@
+もしかして：[UtaFormatix](https://sdercolin.github.io/utaformatix3/) でlab使える形式とかに変換かましたほうがよいかも  
+（VoiSona形式とかはタイミング情報をテキスト出力することができます）
+
+一応実験的ですが、サイトは残しています。
+
 # pj2lab-vite
+
+<img width="1731" height="990" alt="image" src="https://github.com/user-attachments/assets/668a7ee3-d92f-4f63-a47e-12565e594a8d" />
 
 Synthesizer V の `.svp` と VOCALOID の `.vpr` を、音声処理で使いやすい `.lab` テキストへ変換する Web ツールです。  
 ブラウザだけで動作し、ファイルを外部サーバーへアップロードせずに利用できます。
