@@ -28,7 +28,6 @@ Synthesizer V の `.svp` と VOCALOID の `.vpr` を、音声処理で使いや�
 - 明示音素がない場合
   - `lyrics` から日本語音素を推定します
 - `rap` ノートは変換対象から除外します
-- VOCALOID の無音ノート (`sil`, `pau`) は出力しません
 
 ## 音素長の扱い
 

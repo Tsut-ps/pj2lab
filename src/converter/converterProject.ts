@@ -111,7 +111,7 @@ function normalizeVprNote(note: VprNote, partOffset: number): SvNote | null {
   const durationTicks = Number.isFinite(note.duration) ? (note.duration ?? 0) : 0
   const phonemes = note.phoneme?.trim()
 
-  if (durationTicks <= 0 || isSilentVprPhoneme(phonemes)) {
+  if (durationTicks <= 0) {
     return null
   }
 
@@ -121,15 +121,6 @@ function normalizeVprNote(note: VprNote, partOffset: number): SvNote | null {
     lyrics: note.lyric?.trim(),
     phonemes,
   }
-}
-
-function isSilentVprPhoneme(phoneme: string | undefined) {
-  if (!phoneme) {
-    return false
-  }
-
-  const normalized = phoneme.trim().toLowerCase()
-  return normalized === "sil" || normalized === "pau"
 }
 
 function scaleVprPosition(position: number) {
